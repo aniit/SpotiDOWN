@@ -1,0 +1,45 @@
+import spotipy
+from spotipy.oauth2 import SpotifyOAuth
+import json
+
+# Your Spotify API Credentials
+SPOTIPY_CLIENT_ID = '_____'
+SPOTIPY_CLIENT_SECRET = '_____'
+SPOTIPY_REDIRECT_URI = 'http://localhost:3000'
+SCOPE = 'user-library-read'
+
+# Authenticate with Spotify
+sp = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id=SPOTIPY_CLIENT_ID,
+                                               client_secret=SPOTIPY_CLIENT_SECRET,
+                                               redirect_uri=SPOTIPY_REDIRECT_URI,
+                                               scope=SCOPE))
+
+def save_tracks():
+    # List to hold saved tracks
+    saved_tracks = []
+
+    # Initial call to fetch first batch of saved tracks
+    results = sp.current_user_saved_tracks(limit=50)
+    while results:
+        for item in results['items']:
+            track = item['track']
+            saved_tracks.append({'artist': track['artists'][0]['name'], 'track_name': track['name']})
+        
+        # Check if more tracks are available
+        if results['next']:
+            results = sp.next(results)
+        else:
+            results = None
+
+    # Save the list of saved tracks to a file
+    with open('saved_tracks.json', 'w', encoding='utf-8') as f:
+        json.dump(saved_tracks, f, ensure_ascii=False, indent=4)
+
+    print(f'Saved {len(saved_tracks)} tracks to saved_tracks.json.')
+
+import os
+print("Current Working Directory:", os.getcwd())
+
+
+if __name__ == '__main__':
+    save_tracks()
